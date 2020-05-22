@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1590192963 source:d:\documents\school\isc3u\summative\yahtzeesummative\yahtzeesummative.cpp
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<allegro5/allegro.h>
+	<allegro5/allegro_font.h>
+	<allegro5/allegro_ttf.h>
+	<allegro5/allegro_native_dialog.h>
+	<allegro5/allegro_video.h>
+
