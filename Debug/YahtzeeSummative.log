@@ -1,0 +1,5 @@
+﻿  YahtzeeSummative.cpp
+D:\Documents\School\ISC3U\Summative\YahtzeeSummative\YahtzeeSummative.cpp(20,26): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Documents\School\ISC3U\Summative\YahtzeeSummative\YahtzeeSummative.cpp(23,5): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Documents\School\ISC3U\Summative\YahtzeeSummative\YahtzeeSummative.cpp(54): warning C4700: uninitialized local variable 'events' used
+  YahtzeeSummative.vcxproj -> D:\Documents\School\ISC3U\Summative\YahtzeeSummative\Debug\YahtzeeSummative.exe
