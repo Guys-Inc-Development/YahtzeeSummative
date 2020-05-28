@@ -28,7 +28,7 @@ struct uSettings {
 };
 
 // Reads in user settings from file and stores them in struct
-uSettings prevSettings() { Reads in user settings
+uSettings prevSettings() { //Reads in user settings
   FILE *userSettings = fopen("UserSettings.txt", "r+");
   uSettings options;
 
