@@ -1,5 +1,6 @@
 // Dylan - Yahtzee Summative
 // Yahtzee Game Summative
+//Tacos
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_font.h>
@@ -26,13 +27,12 @@ struct uSettings {
   float FPS;
 };
 
-// Reads in user settings from file and stores them in strcut
-uSettings prevSettings() {  // Reads in user settings
+// Reads in user settings from file and stores them in struct
+uSettings prevSettings() { Reads in user settings
   FILE *userSettings = fopen("UserSettings.txt", "r+");
   uSettings options;
 
-  fscanf(userSettings, "SCREEN_W = %d\nSCREEN_H = %d\nFPS = %f",
-         &options.SCREEN_W, &options.SCREEN_H, &options.FPS);
+  fscanf(userSettings, "SCREEN_W = %d\nSCREEN_H = %d\nFPS = %f", &options.SCREEN_W, &options.SCREEN_H, &options.FPS);
   fclose(userSettings);
   return options;
 }
@@ -41,9 +41,7 @@ uSettings prevSettings() {  // Reads in user settings
 void titleScreen(ALLEGRO_DISPLAY *display, ALLEGRO_VIDEO *titlescreen) {
   ALLEGRO_BITMAP *frame = al_get_video_frame(titlescreen);
   if (!frame) return;
-  al_draw_scaled_bitmap(
-      frame, 0, 0, al_get_bitmap_width(frame), al_get_bitmap_height(frame), 0,
-      0, al_get_display_width(display), al_get_display_height(display), NULL);
+  al_draw_scaled_bitmap(frame, 0, 0, al_get_bitmap_width(frame), al_get_bitmap_height(frame), 0, 0, al_get_display_width(display), al_get_display_height(display), NULL);
 }
 
 int main() {
@@ -61,12 +59,10 @@ int main() {
 
   // Read in user settings
   uSettings options;         // Calls upon uSettings Struct
-  options = prevSettings();  // Calls upon prevSettings function to read in
-                             // current user settings
+  options = prevSettings();  // Calls upon prevSettings function to read in current user settings
 
   // Initialize Essential Allegro Elements
-  ALLEGRO_DISPLAY *display =
-      al_create_display(options.SCREEN_W, options.SCREEN_H);
+  ALLEGRO_DISPLAY *display = al_create_display(options.SCREEN_W, options.SCREEN_H);
   ALLEGRO_TIMER *timer = al_create_timer(1 / options.FPS);
   ALLEGRO_TIMER *playButtonAppear = al_create_timer(3);
   ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
@@ -74,8 +70,7 @@ int main() {
 
   // Initialize Non-essential Allegro Elements
   ALLEGRO_VIDEO *titlescreen = al_open_video("Yahtzee0001-7198.ogv");
-  ALLEGRO_FONT *text54 =
-      al_load_font("Montserrat-ExtraBold.ttf", 54, ALLEGRO_ALIGN_CENTER);
+  ALLEGRO_FONT *text54 = al_load_font("Montserrat-ExtraBold.ttf", 54, ALLEGRO_ALIGN_CENTER);
   ALLEGRO_COLOR black = al_map_rgb(0, 0, 0);
   ALLEGRO_COLOR red = al_map_rgb(230, 60, 56);
   ALLEGRO_COLOR white = al_map_rgb(255, 255, 255);
@@ -83,8 +78,7 @@ int main() {
 
   // Register Events Sources
   al_register_event_source(event_queue, al_get_timer_event_source(timer));
-  al_register_event_source(event_queue,
-                           al_get_timer_event_source(playButtonAppear));
+  al_register_event_source(event_queue, al_get_timer_event_source(playButtonAppear));
   al_register_event_source(event_queue, al_get_display_event_source(display));
   al_register_event_source(event_queue, al_get_video_event_source(titlescreen));
   al_register_event_source(event_queue, al_get_mouse_event_source());
@@ -115,22 +109,14 @@ int main() {
     if (events.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
       if (events.mouse.button & 1) {
         if (screen == Title &&
-            showPlayButton ==
-                true) {  // If buttons are met, and mouse is clicked, checks if
+            showPlayButton == true) {  // If buttons are met, and mouse is clicked, checks if
                          // mouse clicked the button, and acts accordingly
-          if (mouseX >= options.SCREEN_W * 0.2 &&
-              mouseY >= options.SCREEN_H * 0.8 &&
-              mouseX <= options.SCREEN_W * 0.2 + 200 &&
-              mouseY <= options.SCREEN_H * 0.8 + 100) {
+          if (mouseX >= options.SCREEN_W * 0.2 && mouseY >= options.SCREEN_H * 0.8 &&  mouseX <= options.SCREEN_W * 0.2 + 200 && mouseY <= options.SCREEN_H * 0.8 + 100) {
             al_close_video(titlescreen);
             screen == Playing;
             al_clear_to_color(black);
             al_flip_display();
-          } else if (mouseX >= options.SCREEN_W * 0.65 &&
-                     mouseY >= options.SCREEN_H * 0.8 &&
-                     mouseX <= options.SCREEN_W * 0.65 + 200 &&
-                     mouseY <= options.SCREEN_H * 0.8 + 100 &&
-                     showPlayButton == true) {
+          } else if (mouseX >= options.SCREEN_W * 0.65 && mouseY >= options.SCREEN_H * 0.8 && mouseX <= options.SCREEN_W * 0.65 + 200 && mouseY <= options.SCREEN_H * 0.8 + 100 && showPlayButton == true) {
             exit = true;
           }
         }
@@ -171,22 +157,10 @@ int main() {
         if (screen == Title) {
           titleScreen(display, titlescreen);  // I hate the video addon
           if (showPlayButton == true) {       // Draws buttons
-            al_draw_filled_rounded_rectangle(
-                options.SCREEN_W * 0.2, options.SCREEN_H * 0.8,
-                options.SCREEN_W * 0.2 + 200, options.SCREEN_H * 0.8 + 100, 15,
-                15, al_map_rgba(230, 60, 56, titleFade));
-            al_draw_text(text54, al_map_rgba(255, 255, 255, titleFade),
-                         options.SCREEN_W * 0.2 + 100,
-                         options.SCREEN_H * 0.8 + 15, ALLEGRO_ALIGN_CENTER,
-                         "PLAY");
-            al_draw_filled_rounded_rectangle(
-                options.SCREEN_W * 0.65, options.SCREEN_H * 0.8,
-                options.SCREEN_W * 0.65 + 200, options.SCREEN_H * 0.8 + 100, 15,
-                15, al_map_rgba(230, 60, 56, titleFade));
-            al_draw_text(text54, al_map_rgba(255, 255, 255, titleFade),
-                         options.SCREEN_W * 0.65 + 100,
-                         options.SCREEN_H * 0.8 + 15, ALLEGRO_ALIGN_CENTER,
-                         "QUIT");
+            al_draw_filled_rounded_rectangle(options.SCREEN_W * 0.2, options.SCREEN_H * 0.8, options.SCREEN_W * 0.2 + 200, options.SCREEN_H * 0.8 + 100, 15, 15, al_map_rgba(230, 60, 56, titleFade));
+            al_draw_text(text54, al_map_rgba(255, 255, 255, titleFade), options.SCREEN_W * 0.2 + 100, options.SCREEN_H * 0.8 + 15, ALLEGRO_ALIGN_CENTER, "PLAY");
+            al_draw_filled_rounded_rectangle(options.SCREEN_W * 0.65, options.SCREEN_H * 0.8, options.SCREEN_W * 0.65 + 200, options.SCREEN_H * 0.8 + 100, 15, 15, al_map_rgba(230, 60, 56, titleFade));
+            al_draw_text(text54, al_map_rgba(255, 255, 255, titleFade), options.SCREEN_W * 0.65 + 100,  options.SCREEN_H * 0.8 + 15, ALLEGRO_ALIGN_CENTER, "QUIT");
             if (titleFade < 255) {
               titleFade += 5;
             }
