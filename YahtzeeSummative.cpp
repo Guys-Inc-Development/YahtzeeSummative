@@ -85,11 +85,15 @@ void buttonCheck(ALLEGRO_DISPLAY *display, int mouseX, int mouseY, bool showPlay
 			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 		}
 	} else if (screen == Options) {
-		if (mouseX >= sliderX[0] + 492 && mouseX <= sliderX[0] + 492 + 30 && mouseY >= 306 && mouseY <= 319) { // FPS
+		if (mouseX >= sliderX[0] + 492 - 30 && mouseX <= sliderX[0] + 492 && mouseY >= 246 && mouseY <= 259) { // SCREEN W
 			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
-		} else if (mouseX >= sliderX[1] && mouseX <= sliderX[1] + 492 + 30 && mouseY >= 336 && mouseY <= 349) { // Sound Volume
+		} else if (mouseX >= sliderX[1] + 492 - 30 && mouseX <= sliderX[1] + 492 && mouseY >= 276 && mouseY <= 289) { // SCREEN H
 			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
-		} else if (mouseX >= sliderX[2] && mouseX <= sliderX[2] + 492 + 30 && mouseY >= 366 && mouseY <= 379) { // Music Volume
+		} else if (mouseX >= sliderX[2] + 492 && mouseX <= sliderX[2] + 492 + 30 && mouseY >= 306 && mouseY <= 319) { // FPS
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else if (mouseX >= sliderX[3] + 492 - 30 && mouseX <= sliderX[3] + 492 && mouseY >= 336 && mouseY <= 349) { // Sound Volume
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else if (mouseX >= sliderX[4] + 492 - 30 && mouseX <= sliderX[4] + 492 && mouseY >= 366 && mouseY <= 379) { // Music Volume
 			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
 		} else if (mouseX >= 942 && mouseX <= 1200 && mouseY >= 418 && mouseY <= 553) { // Save
 			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
@@ -129,6 +133,8 @@ int main() {
 	uSettings options;         // Calls upon uSettings Struct
 	options = prevSettings();  // Calls upon prevSettings function to read in current user settings
 
+	al_set_new_display_refresh_rate(options.FPS);
+
 	// Initialize Essential Allegro Elements
 	ALLEGRO_DISPLAY *display = al_create_display(options.SCREEN_W, options.SCREEN_H);
 	ALLEGRO_TIMER *timer = al_create_timer(1 / options.FPS);
@@ -162,8 +168,10 @@ int main() {
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 
 	// Initialize Standard Variables
-	bool exit = false, draw = true, showPlayButton = false, uno = false, sliderToggle[3] = {false, false, false};
-	int mouseX = 0, mouseY = 0, titleFade = 0, sliderX[3] = {0, 0, 0}, mouseOffsetX = 0, sliderMoved[3] = {0, 0, 0};
+	bool exit = false, draw = true, showPlayButton = false, uno = false, sliderToggle[5] = {false, false, false, false, false};
+	int mouseX = 0, mouseY = 0, titleFade = 0, sliderX[5] = {(options.SCREEN_W - 1280) * 1.765, (options.SCREEN_H - 720) * 0.995, (options.FPS - 60) * 4, (options.SOUND_EFFECTS - 1) * 140, (options.MUSIC - 1) * 140}, 
+		mouseOffsetX = 0, sliderMoved[5] = {(options.SCREEN_W - 1280) * 1.765, (options.SCREEN_H - 720) * 0.995, (options.FPS - 60) * 4, (options.SOUND_EFFECTS - 1) * 140, (options.MUSIC - 1) * 140 };
+	float sliderNum[5] = {options.SCREEN_W, options.SCREEN_H, options.FPS, options.SOUND_EFFECTS, options.MUSIC};
 	screen = Title;
 
 	// Begin Game Loop
@@ -185,29 +193,50 @@ int main() {
 			mouseY = events.mouse.y;
 			buttonCheck(display, mouseX, mouseY, showPlayButton, sliderX);
 			if (screen == Options) {
-				if (sliderToggle[0] == true) {
+				if (sliderToggle[0] == true) { // Screen W
 					sliderX[0] = mouseX - mouseOffsetX + sliderMoved[0];
-					if (sliderX[0] <= -145) {
-						sliderX[0] = -145;
-					} else if (sliderX[0] >= 82) {
-						sliderX[0] = 82;
+					if (sliderX[0] <= -115) {
+						sliderX[0] = -115;
+					} else if (sliderX[0] >= 110) {
+						sliderX[0] = 110;
 					} 
+					sliderNum[0] = sliderX[0] * 2.225 + 1280;
 					draw = true;
-				} else if (sliderToggle[1] == true) {
+				} else if (sliderToggle[1] == true) { // Screen H
 					sliderX[1] = mouseX - mouseOffsetX + sliderMoved[1];
-					if (sliderX[1] <= -112) {
-						sliderX[1] = -112;
-					} else if (sliderX[1] >= 115) {
-						sliderX[1] = 115;
+					if (sliderX[1] <= -115) {
+						sliderX[1] = -115;
+					} else if (sliderX[1] >= 110) {
+						sliderX[1] = 110;
 					}
+					sliderNum[1] = sliderX[1] * 1.25 + 720;
 					draw = true;
-				} else if (sliderToggle[2] == true) {
+				} else if (sliderToggle[2] == true) { // FPS
 					sliderX[2] = mouseX - mouseOffsetX + sliderMoved[2];
-					if (sliderX[2] <= -112) {
-						sliderX[2] = -112;
-					} else if (sliderX[2] >= 115) {
-						sliderX[2] = 115;
+					if (sliderX[2] <= -145) {
+						sliderX[2] = -145;
+					} else if (sliderX[2] >= 82) {
+						sliderX[2] = 82;
+					} 
+					sliderNum[2] = (sliderX[2] * 0.245) + 60;
+					draw = true;
+				} else if (sliderToggle[3] == true) { // SOUND EFFCTS VOLUME
+					sliderX[3] = mouseX - mouseOffsetX + sliderMoved[1];
+					if (sliderX[3] <= -112) {
+						sliderX[3] = -112;
+					} else if (sliderX[3] >= 115) {
+						sliderX[3] = 115;
 					}
+					sliderNum[3] = (sliderX[3] * 0.0085) + 1;
+					draw = true;
+				} else if (sliderToggle[4] == true) { // MUSIC VOLUME
+					sliderX[4] = mouseX - mouseOffsetX + sliderMoved[4];
+					if (sliderX[4] <= -112) {
+						sliderX[4] = -112;
+					} else if (sliderX[4] >= 115) {
+						sliderX[4] = 115;
+					}
+					sliderNum[4] = (sliderX[4] * 0.0085) + 1;
 					draw = true;
 				}
 			}
@@ -259,34 +288,55 @@ int main() {
 						draw = true;
 					} 
 				} else if (screen == Options) {
-					if (mouseX >= sliderX[0] + 492 && mouseX <= sliderX[0] + 492 + 30 && mouseY >= 306 && mouseY <= 319) { // Slider 1
+					if (mouseX >= sliderX[0] + 492 - 30 && mouseX <= sliderX[0] + 492 && mouseY >= 246 && mouseY <= 259) { // Slider 1
 						sliderToggle[0] = true;
 						mouseOffsetX = mouseX;
 						al_hide_mouse_cursor(display);
-					} else if (mouseX >= sliderX[1] && mouseX <= sliderX[1] + 492 + 30 && mouseY >= 336 && mouseY <= 349) { // Slider 2
+					} else if (mouseX >= sliderX[1] + 492 - 30 && mouseX <= sliderX[1] + 492 && mouseY >= 276 && mouseY <= 289) { // Slider 2
 						sliderToggle[1] = true;
 						mouseOffsetX = mouseX;
 						al_hide_mouse_cursor(display);
-					} else if (mouseX >= sliderX[2] && mouseX <= sliderX[2] + 492 + 30 && mouseY >= 366 && mouseY <= 379) { // Slider 3
+					} else if (mouseX >= sliderX[2] + 492 && mouseX <= sliderX[2] + 492 + 30 && mouseY >= 306 && mouseY <= 319) { // Slider 3
 						sliderToggle[2] = true;
+						mouseOffsetX = mouseX;
+						al_hide_mouse_cursor(display);
+					} else if (mouseX >= sliderX[3] + 492 - 30 && mouseX <= sliderX[3] + 492 && mouseY >= 336 && mouseY <= 349) { // Slider 4
+						sliderToggle[3] = true;
+						mouseOffsetX = mouseX;
+						al_hide_mouse_cursor(display);
+					} else if (mouseX >= sliderX[4] + 492 - 30 && mouseX <= sliderX[4] + 492 && mouseY >= 366 && mouseY <= 379) { // Slider 5
+						sliderToggle[4] = true;
 						mouseOffsetX = mouseX;
 						al_hide_mouse_cursor(display);
 					} else if (mouseX >= 944 && mouseX <= 1200 && mouseY >= 420 && mouseY <= 533) { // Save
 						screen = GamePick;
 						FILE *settings = fopen("UserSettings.txt", "w");
-						fprintf(settings, "SCREEN_W = 1280\nSCREEN_H = 720\nFPS = %.0f.0\nSOUND_EFFECTS = %f\nMUSIC = %f", options.FPS + sliderX[0] * 0.249, options.SOUND_EFFECTS + sliderX[1] * 0.0085, options.MUSIC + sliderX[1] * 0.0085);
+						fprintf(settings, "SCREEN_W = %.0f\nSCREEN_H = %.0f\nFPS = %.0f.0\nSOUND_EFFECTS = %.1f\nMUSIC = %.1f", sliderNum[0], sliderNum[1], sliderNum[2], sliderNum[3], sliderNum[4]);
 						fclose(settings);
-						options = prevSettings();
+						if (options.FPS != sliderNum[2]) { // Changes Frame rate is chanegd by user
+							options = prevSettings();
+							al_set_timer_count(timer, 1 / options.FPS);
+						}
+						if (options.SCREEN_W != sliderNum[0] || options.SCREEN_H != sliderNum[1]) {
+							options = prevSettings();
+							al_resize_display(display, options.SCREEN_W, options.SCREEN_H);
+						}
 						draw = true;
 					} else if (mouseX >= 747 && mouseX <= 913 && mouseY >= 603 && mouseY <= 676) { // Reset
 						FILE *settings = fopen("UserSettings.txt", "w");
-						fprintf(settings, "SCREEN_W = 1280\nSCREEN_H = 720\nFPS = 60\nSOUND_EFFECTS = 1.0\nMUSIC = 1.0");
+						fprintf(settings, "SCREEN_W = 1280\nSCREEN_H = 720\nFPS = 60.0\nSOUND_EFFECTS = 1.0\nMUSIC = 1.0");
 						fclose(settings);
-						for (int i = 0; i < 3; i++) {
+						for (int i = 0; i < 5; i++) 
 							sliderX[i] = 0;
-						}
 						mouseOffsetX = 0;
-						options = prevSettings();
+						al_resize_display(display, 1280, 720);
+						if (options.FPS != sliderNum[2]) { 
+							options = prevSettings();
+							al_set_timer_count(timer, 1 / options.FPS);
+						} else {
+							options = prevSettings();
+						}
+						sliderNum[0] = options.SCREEN_W, sliderNum[1] = options.SCREEN_H, sliderNum[2] = options.FPS, sliderNum[3] = options.SOUND_EFFECTS, sliderNum[4] = options.MUSIC;
 						draw = true;
 					} else if (mouseX >= 944 && mouseX <= 1200 && mouseY >= 560 && mouseY <= 676) { // Cancel
 						screen = GamePick;
@@ -294,7 +344,8 @@ int main() {
 					}
 				}
 			}
-		} else if (events.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+		} 
+		if (events.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
 			if (screen == Options) {
 				if (sliderToggle[0] == true) {
 					sliderToggle[0] = false;
@@ -308,10 +359,18 @@ int main() {
 					sliderToggle[2] = false;
 					sliderMoved[2] = mouseX - 492;
 					al_show_mouse_cursor(display);
+				} else if (sliderToggle[3] == true) {
+					sliderToggle[3] = false;
+					sliderMoved[3] = mouseX - 492;
+					al_show_mouse_cursor(display);
+				} else if (sliderToggle[4] == true) {
+					sliderToggle[4] = false;
+					sliderMoved[4] = mouseX - 492;
+					al_show_mouse_cursor(display);
 				}
 			}
 		}
-		
+
 
 		// Checks for keyboard events
 		if (events.type == ALLEGRO_EVENT_KEY_DOWN) {
@@ -388,14 +447,16 @@ int main() {
 						}
 					} else if (screen == Options) {
 						al_draw_scaled_bitmap(optionsScreen, 0, 0, 1920, 1080, 0, 0, options.SCREEN_W, options.SCREEN_H, NULL); // Card
-						al_draw_textf(text16, black, 245, 243, NULL, "%d", options.SCREEN_W); 
-						al_draw_textf(text16, black, 245, 274, NULL, "%d", options.SCREEN_H);
-						al_draw_textf(text16, black, 245, 305, NULL, "%.0f.0", options.FPS + sliderX[0] * 0.249);
-						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[0] - 3, 0, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 1
-						al_draw_textf(text16, black, 245, 335, NULL, "%.1f", options.SOUND_EFFECTS + sliderX[1] * 0.0085);
-						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[1] - 35, 30, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 2
-						al_draw_textf(text16, black, 245, 365, NULL, "%.1f", options.MUSIC + sliderX[2] * 0.0085);
-						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[2] - 35, 60, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 3
+						al_draw_textf(text16, black, 245, 243, NULL, "%.0f", sliderNum[0]); 
+						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[0] - 30, -60, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 1
+						al_draw_textf(text16, black, 245, 274, NULL, "%.0f", sliderNum[1]);
+						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[1] - 30, -30, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 2
+						al_draw_textf(text16, black, 245, 305, NULL, "%.0f.0", sliderNum[2]);
+						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[2] - 3, 0, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 3
+						al_draw_textf(text16, black, 245, 335, NULL, "%.1f", sliderNum[3]);
+						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[3] - 35, 30, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 4
+						al_draw_textf(text16, black, 245, 365, NULL, "%.1f", sliderNum[4]);
+						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[4] - 35, 60, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 5
 					}
 					draw = false;
 					al_flip_display();
