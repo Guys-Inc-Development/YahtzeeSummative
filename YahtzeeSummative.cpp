@@ -13,6 +13,7 @@
 #include <allegro5/allegro_video.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
+#include <time.h>
 
 // Enum to save screenstate
 enum screenState {
@@ -22,6 +23,8 @@ enum screenState {
 	GameOptions = 4,
 	Playing = 5,
 	Options = 6,
+	gameSetup = 7,
+	Scoring = 8,
 } screen;
 
 // User settings struct
@@ -35,7 +38,7 @@ struct uSettings {
 
 // Reads in user settings from file and stores them in struct
 uSettings prevSettings() { //Reads in user settings
-	FILE* userSettings = fopen("UserSettings.txt", "r");
+	FILE* userSettings = fopen("./assets/UserSettings.txt", "r");
 	uSettings options;
 	fscanf(userSettings, "SCREEN_W = %d\nSCREEN_H = %d\nFPS = %f\nSOUND_EFFECTS = %f\nMUSIC = %f", &options.SCREEN_W, &options.SCREEN_H, &options.FPS, &options.SOUND_EFFECTS, &options.MUSIC);
 	fclose(userSettings);
@@ -52,7 +55,7 @@ void playVideo(ALLEGRO_DISPLAY *display, ALLEGRO_VIDEO *video) {
 
 void buttonCheck(ALLEGRO_DISPLAY *display, int mouseX, int mouseY, bool showPlayButton, int sliderX[3]) {
 	uSettings options;
-	if (screen == Title && showPlayButton == true) {
+	if (screen == Title && showPlayButton) {
 		if (mouseX >= options.SCREEN_W * 0.2 && mouseY >= options.SCREEN_H * 0.8 && mouseX <= options.SCREEN_W * 0.2 + 200 && mouseY <= options.SCREEN_H * 0.8 + 100) {
 			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
 		} else if (mouseX >= options.SCREEN_W * 0.65 && mouseY >= options.SCREEN_H * 0.8 && mouseX <= options.SCREEN_W * 0.65 + 200 && mouseY <= options.SCREEN_H * 0.8 + 100) {
@@ -104,11 +107,112 @@ void buttonCheck(ALLEGRO_DISPLAY *display, int mouseX, int mouseY, bool showPlay
 		} else {
 			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 		}
+	} else if (screen == gameSetup) {
+		if (mouseX >= 85 && mouseX <= 193 && mouseY >= 238 && mouseY <= 348) { // Add Players
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK); 
+		} else if (mouseX >= 1083 && mouseX <= 1194 && mouseY >= 238 && mouseY <= 348) { // Remove Players
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else if (mouseX >= 34 && mouseX <= 146 && mouseY >= 34 && mouseY <= 95) { // Go Back
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else if (mouseX >= 976 && mouseX <= 1236 && mouseY >= 564 && mouseY <= 679) { // Play
+				al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else {
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+		}
+	} else if (screen == Playing) {
+		if (mouseX >= 994 && mouseY >= 580 && mouseX <= 1248 && mouseY <= 694) { // End Turn
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else if (mouseX >= options.SCREEN_W / 2 - 62.5 - 300 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 - 300 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 1
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else if (mouseX >= options.SCREEN_W / 2 - 62.5 - 150 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 - 150 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 2
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else if (mouseX >= options.SCREEN_W / 2 - 62.5 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 3
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else if (mouseX >= options.SCREEN_W / 2 - 62.5 + 150 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 + 150 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 4
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else if (mouseX >= options.SCREEN_W / 2 - 62.5 + 300 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 + 300 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 5
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+		} else {
+			al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+		}
 	} else {
 		al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 	}
 }
 
+int diceRoll() { // A bit of a useless function, but nontheless
+	return rand() % 6 + 1;;
+}
+
+
+void scoreCalculations (int num1, int num2, int num3, int num4, int num5, ALLEGRO_FONT *text16, ALLEGRO_COLOR black) {
+	int diceNum[5] = {num1, num2, num3, num4, num5}, finalValue[14] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, matches[6] = {0, 0, 0, 0, 0, 0};
+	bool foundNums[6] = {false, false, false, false, false, false};
+
+	// Upper Section
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 5; j++) {
+			if (diceNum[j] == i + 1) {
+				matches[i]++;
+			}
+		}
+		finalValue[i] = matches[i] * (i + 1);
+	}
+	// Lower section
+	for (int i = 0; i < 6; i++) {
+		if (matches[i] >= 3) { // 3 of a kind
+			finalValue[6] = diceNum[0] + diceNum[1] + diceNum[2] + diceNum[3] + diceNum[4];
+		}
+		if (matches[i] >= 4) { // 4 of a kind
+			finalValue[7] = diceNum[0] + diceNum[1] + diceNum[2] + diceNum[3] + diceNum[4];
+		}
+		if (matches[i] == 5) { // Yahtzee
+			finalValue[11] += 50;
+		}
+		if (matches[i] == 3) { // Full House
+			for (int j = 0; j < 6; j++) {
+				if (matches[j] == 2) {
+					finalValue[8] = 25;
+				}
+			}
+		}
+		if (diceNum[i] == 1) { // Counts which numbers are present
+			foundNums[0] = true;
+		} else if (diceNum[i] == 2) {
+			foundNums[1] = true;
+		} else if (diceNum[i] == 3) {
+			foundNums[2] = true;
+		} else if (diceNum[i] == 4) {
+			foundNums[3] = true;
+		} else if (diceNum[i] == 5) {
+			foundNums[4] = true;
+		} else if (diceNum[i] == 6) {
+			foundNums[5] = true;
+		}
+	}
+	if (foundNums[0] + foundNums[1] + foundNums[2] + foundNums[3] + foundNums[4] + foundNums[5] >= 4) { // Small Straight
+		finalValue[9] = 30;
+	}
+	if (foundNums[0] + foundNums[1] + foundNums[2] + foundNums[3] + foundNums[4] + foundNums[5] == 5) { // Large Straight
+		finalValue[10] = 40;
+	}
+	finalValue[12] = diceNum[0] + diceNum[1] + diceNum[2] + diceNum[3] + diceNum[4];
+	// Upper Section
+	al_draw_textf(text16, black, 435, 128 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[0]);
+	al_draw_textf(text16, black, 435, 154 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[1]);
+	al_draw_textf(text16, black, 435, 180 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[2]);
+	al_draw_textf(text16, black, 435, 206 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[3]);
+	al_draw_textf(text16, black, 435, 232 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[4]);
+	al_draw_textf(text16, black, 435, 258 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[5]);
+	// Lower Section
+	al_draw_textf(text16, black, 435, 388 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[6]);
+	al_draw_textf(text16, black, 435, 414 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[7]);
+	al_draw_textf(text16, black, 435, 440 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[8]);
+	al_draw_textf(text16, black, 435, 466 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[9]);
+	al_draw_textf(text16, black, 435, 492 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[10]);
+	al_draw_textf(text16, black, 435, 518 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[11]);
+	al_draw_textf(text16, black, 435, 544 + 2, ALLEGRO_ALIGN_CENTER, "%d", finalValue[12]);
+}
 
 // Function to show mouse position in console
 void mousePos (int mouseX, int mouseY) {
@@ -128,6 +232,8 @@ int main() {
 	al_install_mouse();
 	al_install_audio();
 	al_reserve_samples(2);
+	// Intializes random numbers
+	srand(time(0));
 
 	// Read in user settings
 	uSettings options;         // Calls upon uSettings Struct
@@ -139,44 +245,63 @@ int main() {
 	ALLEGRO_DISPLAY *display = al_create_display(options.SCREEN_W, options.SCREEN_H);
 	ALLEGRO_TIMER *timer = al_create_timer(1 / options.FPS);
 	ALLEGRO_TIMER *playButtonAppear = al_create_timer(3);
+	ALLEGRO_TIMER *autoEndTurn = al_create_timer(2);
+	ALLEGRO_TIMER *animTimer = al_create_timer(3);
 	ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
 	ALLEGRO_EVENT events;
 
 	// Initialize Non-essential Allegro Elements
-	ALLEGRO_VIDEO *titlescreen = al_open_video("Yahtzee0001-7198.ogv");
-	ALLEGRO_VIDEO *playingBG = al_open_video("Playing Background.ogv");
-	ALLEGRO_BITMAP *pause = al_load_bitmap("Paused Screen.png");
-	ALLEGRO_BITMAP *gamemode = al_load_bitmap("Gamemode Screen.png");
-	ALLEGRO_BITMAP *optionsScreen = al_load_bitmap("Options Screen.png");
-	ALLEGRO_BITMAP *optionSlider = al_load_bitmap("Options Slider Button.png");
-	ALLEGRO_SAMPLE *error = al_load_sample("Error Sound Effect.mp3");
-	ALLEGRO_FONT *text54 = al_load_font("Montserrat-ExtraBold.ttf", 54, ALLEGRO_ALIGN_CENTER);
-	ALLEGRO_FONT *text24 = al_load_font("Montserrat-ExtraBold.ttf", 24, NULL);
-	ALLEGRO_FONT *text16 = al_load_font("Montserrat-ExtraBold.ttf", 16, NULL);
+	ALLEGRO_VIDEO *titlescreen = al_open_video("./assets/Yahtzee0001-7198.ogv");
+	ALLEGRO_VIDEO *playingBG = al_open_video("./assets/Playing Background.ogv");
+	ALLEGRO_VIDEO *scoringVideo = al_open_video("./assets/Scorecard Screen.ogv");
+	ALLEGRO_BITMAP *pause = al_load_bitmap("./assets/Paused Screen.png");
+	ALLEGRO_BITMAP *gamemode = al_load_bitmap("./assets/Gamemode Screen.png");
+	ALLEGRO_BITMAP *optionsScreen = al_load_bitmap("./assets/Options Screen.png");
+	ALLEGRO_BITMAP *optionSlider = al_load_bitmap("./assets/Options Slider Button.png");
+	ALLEGRO_BITMAP *playerAdd = al_load_bitmap("./assets/Players Screen.png");
+	ALLEGRO_BITMAP *die = al_load_bitmap("./assets/Die.png");
+	ALLEGRO_BITMAP *button = al_load_bitmap("./assets/Button.png");
+	ALLEGRO_BITMAP *dieOverlay = al_load_bitmap("./assets/Die Overlay.png");
+	ALLEGRO_SAMPLE *error = al_load_sample("./assets/Error Sound Effect.mp3");
+	ALLEGRO_SAMPLE_ID mus;
+	ALLEGRO_SAMPLE *music = al_load_sample("./assets/Background Music.mp3");
+	ALLEGRO_FONT *text72 = al_load_font("./assets/Montserrat-ExtraBold.ttf", 72, NULL);
+	ALLEGRO_FONT *text54 = al_load_font("./assets/Montserrat-ExtraBold.ttf", 54, NULL);
+	ALLEGRO_FONT *text36 = al_load_font("./assets/Montserrat-ExtraBold.ttf", 36, NULL);
+	ALLEGRO_FONT *text24 = al_load_font("./assets/Montserrat-ExtraBold.ttf", 24, NULL);
+	ALLEGRO_FONT *text16 = al_load_font("./assets/Montserrat-ExtraBold.ttf", 16, NULL);
 	ALLEGRO_COLOR black = al_map_rgb(0, 0, 0);
 	ALLEGRO_COLOR red = al_map_rgb(230, 60, 56);
 	ALLEGRO_COLOR white = al_map_rgb(255, 255, 255);
-	al_set_window_title(display, "Yahtzee V0.0.6");
+	al_set_window_title(display, "Yahtzee V0.0.7");
 
 	// Register Events Sources
 	al_register_event_source(event_queue, al_get_timer_event_source(timer));
 	al_register_event_source(event_queue, al_get_timer_event_source(playButtonAppear));
+	al_register_event_source(event_queue, al_get_timer_event_source(autoEndTurn));
+	al_register_event_source(event_queue, al_get_timer_event_source(animTimer));
 	al_register_event_source(event_queue, al_get_display_event_source(display));
 	al_register_event_source(event_queue, al_get_video_event_source(titlescreen));
 	al_register_event_source(event_queue, al_get_video_event_source(playingBG));
+	al_register_event_source(event_queue, al_get_video_event_source(scoringVideo));
 	al_register_event_source(event_queue, al_get_mouse_event_source());
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 
 	// Initialize Standard Variables
-	bool exit = false, draw = true, showPlayButton = false, uno = false, sliderToggle[5] = {false, false, false, false, false};
-	int mouseX = 0, mouseY = 0, titleFade = 0, sliderX[5] = {(options.SCREEN_W - 1280) * 1.765, (options.SCREEN_H - 720) * 0.995, (options.FPS - 60) * 4, (options.SOUND_EFFECTS - 1) * 140, (options.MUSIC - 1) * 140}, 
-		mouseOffsetX = 0, sliderMoved[5] = {(options.SCREEN_W - 1280) * 1.765, (options.SCREEN_H - 720) * 0.995, (options.FPS - 60) * 4, (options.SOUND_EFFECTS - 1) * 140, (options.MUSIC - 1) * 140 };
+	bool exit = false, draw = true, showPlayButton = false, uno = false, sliderToggle[5] = {false, false, false, false, false}, rolling[5] = {false, false, false, false, false}, rollAnim[5] = {false, false, false, false, false}, spin = true;
+	int mouseX = 0, mouseY = 0, titleFade = 0, sliderX[5] = {(options.SCREEN_W - 1280) * 2.225, (options.SCREEN_H - 720) * 1.25, (options.FPS - 60) * 4, (options.SOUND_EFFECTS - 1) * 140, (options.MUSIC - 1) * 140}, 
+		mouseOffsetX = 0, sliderMoved[5] = {(options.SCREEN_W - 1280) * 2.225, (options.SCREEN_H - 720) * 1.25, (options.FPS - 60) * 4, (options.SOUND_EFFECTS - 1) * 140, (options.MUSIC - 1) * 140 },
+		players = 2, randColour = 0, colours[20][3] = {{29, 209, 161}, {72, 219, 251}, {255, 159, 67}, {52, 31, 151}, {243, 104, 224}, {200, 214, 229}, {95, 39, 205}, {238, 82, 83}}, currentPlayer = 1, diceNum[5] = {0, 0, 0, 0, 0}, 
+		rollTimer = 0, dieOffset = 0, turn = 1;
 	float sliderNum[5] = {options.SCREEN_W, options.SCREEN_H, options.FPS, options.SOUND_EFFECTS, options.MUSIC};
+
 	screen = Title;
 
 	// Begin Game Loop
 	al_start_video(titlescreen, al_get_default_mixer());
 	al_start_video(playingBG, al_get_default_mixer());
+	al_start_video(scoringVideo, al_get_default_mixer());
+	al_set_video_playing(scoringVideo, false);
 	al_set_video_playing(playingBG, false);
 	al_start_timer(playButtonAppear);
 	al_start_timer(timer);
@@ -193,7 +318,7 @@ int main() {
 			mouseY = events.mouse.y;
 			buttonCheck(display, mouseX, mouseY, showPlayButton, sliderX);
 			if (screen == Options) {
-				if (sliderToggle[0] == true) { // Screen W
+				if (sliderToggle[0]) { // Screen W
 					sliderX[0] = mouseX - mouseOffsetX + sliderMoved[0];
 					if (sliderX[0] <= -115) {
 						sliderX[0] = -115;
@@ -202,7 +327,7 @@ int main() {
 					} 
 					sliderNum[0] = sliderX[0] * 2.225 + 1280;
 					draw = true;
-				} else if (sliderToggle[1] == true) { // Screen H
+				} else if (sliderToggle[1]) { // Screen H
 					sliderX[1] = mouseX - mouseOffsetX + sliderMoved[1];
 					if (sliderX[1] <= -115) {
 						sliderX[1] = -115;
@@ -211,7 +336,7 @@ int main() {
 					}
 					sliderNum[1] = sliderX[1] * 1.25 + 720;
 					draw = true;
-				} else if (sliderToggle[2] == true) { // FPS
+				} else if (sliderToggle[2]) { // FPS
 					sliderX[2] = mouseX - mouseOffsetX + sliderMoved[2];
 					if (sliderX[2] <= -145) {
 						sliderX[2] = -145;
@@ -220,8 +345,8 @@ int main() {
 					} 
 					sliderNum[2] = (sliderX[2] * 0.245) + 60;
 					draw = true;
-				} else if (sliderToggle[3] == true) { // SOUND EFFCTS VOLUME
-					sliderX[3] = mouseX - mouseOffsetX + sliderMoved[1];
+				} else if (sliderToggle[3]) { // SOUND EFFCTS VOLUME
+					sliderX[3] = mouseX - mouseOffsetX + sliderMoved[3];
 					if (sliderX[3] <= -112) {
 						sliderX[3] = -112;
 					} else if (sliderX[3] >= 115) {
@@ -229,7 +354,7 @@ int main() {
 					}
 					sliderNum[3] = (sliderX[3] * 0.0085) + 1;
 					draw = true;
-				} else if (sliderToggle[4] == true) { // MUSIC VOLUME
+				} else if (sliderToggle[4]) { // MUSIC VOLUME
 					sliderX[4] = mouseX - mouseOffsetX + sliderMoved[4];
 					if (sliderX[4] <= -112) {
 						sliderX[4] = -112;
@@ -244,19 +369,21 @@ int main() {
 		// Checks for mouse clicks
 		if (events.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
 			if (events.mouse.button & 1) {
-				if (screen == Title && showPlayButton == true) {  // If buttons are met, and mouse is clicked, checks if mouse clicked the button, and acts accordingly
-					if (mouseX >= options.SCREEN_W * 0.2 && mouseY >= options.SCREEN_H * 0.8 && mouseX <= options.SCREEN_W * 0.2 + 200 && mouseY <= options.SCREEN_H * 0.8 + 100) {
+				if (screen == Title && showPlayButton) {  // If buttons are met, and mouse is clicked, checks if mouse clicked the button, and acts accordingly
+					if (mouseX >= options.SCREEN_W * 0.2 && mouseY >= options.SCREEN_H * 0.8 && mouseX <= options.SCREEN_W * 0.2 + 200 && mouseY <= options.SCREEN_H * 0.8 + 100) { // Title Play
 						screen = GamePick;
 						al_set_video_playing(titlescreen, false);
 						al_set_video_playing(playingBG, true);
+						al_play_sample(music, options.MUSIC, 0, 1.0, ALLEGRO_PLAYMODE_LOOP, &mus);
 						draw = true;
-					} else if (mouseX >= options.SCREEN_W * 0.65 && mouseY >= options.SCREEN_H * 0.8 && mouseX <= options.SCREEN_W * 0.65 + 200 && mouseY <= options.SCREEN_H * 0.8 + 100) {
+					} else if (mouseX >= options.SCREEN_W * 0.65 && mouseY >= options.SCREEN_H * 0.8 && mouseX <= options.SCREEN_W * 0.65 + 200 && mouseY <= options.SCREEN_H * 0.8 + 100) { // Title Quit
 						exit = true;
 					}
 				} else if (screen == Paused) { // Pause screen buttons
 					if (mouseX >= 50 && mouseX <= 205 && mouseY >= 150 && mouseY <= 205) { // Play
 						screen = Playing;
 						al_set_video_playing(playingBG, true);
+						al_play_sample(music, options.MUSIC, 0, 1.0, ALLEGRO_PLAYMODE_LOOP, &mus);
 						draw = true;
 					} else if (mouseX >= 50 && mouseX <= 320 && mouseY >= 250 && mouseY <= 305) { // Options
 						screen = Options;
@@ -267,6 +394,7 @@ int main() {
 						showPlayButton = false;
 						al_seek_video(titlescreen, 0);
 						al_set_video_playing(titlescreen, true);
+						al_play_sample(music, options.MUSIC, 0, 1.0, ALLEGRO_PLAYMODE_LOOP, &mus);
 						al_resume_timer(playButtonAppear);
 						al_clear_to_color(black);
 						draw = true;
@@ -276,8 +404,11 @@ int main() {
 					}
 				} else if (screen == GamePick) {
 					if (mouseX >= 150 && mouseX <= 345 && mouseY >= 210 && mouseY <= 535) { // Local Multiplayer
-						screen = Playing;
+						screen = gameSetup;
 						al_seek_video(playingBG, 0);
+						al_stop_sample(&mus);
+						al_set_video_playing(playingBG, true);
+						al_play_sample(music, options.MUSIC, 0, 1.0, ALLEGRO_PLAYMODE_LOOP, &mus);
 						draw = true;
 					} else if (mouseX >= 400 && mouseX <= 600 && mouseY >= 210 && mouseY <= 535) { // Online Multiplayer
 						al_play_sample(error, options.SOUND_EFFECTS, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, 0);
@@ -321,6 +452,11 @@ int main() {
 							options = prevSettings();
 							al_resize_display(display, options.SCREEN_W, options.SCREEN_H);
 						}
+						if (options.MUSIC != sliderNum[4]) {
+							options = prevSettings();
+							al_stop_sample(&mus);
+							al_play_sample(music, options.MUSIC, 0, 1.0, ALLEGRO_PLAYMODE_LOOP, &mus);
+						}
 						draw = true;
 					} else if (mouseX >= 747 && mouseX <= 913 && mouseY >= 603 && mouseY <= 676) { // Reset
 						FILE *settings = fopen("UserSettings.txt", "w");
@@ -330,47 +466,144 @@ int main() {
 							sliderX[i] = 0;
 						mouseOffsetX = 0;
 						al_resize_display(display, 1280, 720);
+						al_stop_sample(&mus);
 						if (options.FPS != sliderNum[2]) { 
 							options = prevSettings();
 							al_set_timer_count(timer, 1 / options.FPS);
 						} else {
 							options = prevSettings();
 						}
+						al_play_sample(music, options.MUSIC, 0, 1.0, ALLEGRO_PLAYMODE_LOOP, &mus);
 						sliderNum[0] = options.SCREEN_W, sliderNum[1] = options.SCREEN_H, sliderNum[2] = options.FPS, sliderNum[3] = options.SOUND_EFFECTS, sliderNum[4] = options.MUSIC;
 						draw = true;
 					} else if (mouseX >= 944 && mouseX <= 1200 && mouseY >= 560 && mouseY <= 676) { // Cancel
 						screen = GamePick;
 						draw = true;
 					}
+				} else if (screen == gameSetup) {
+					if (mouseX >= 85 && mouseX <= 193 && mouseY >= 238 && mouseY <= 348) { // Subtract Players
+						players--;
+						if (players <= 1) {
+							players = 2;
+							al_play_sample(error, options.SOUND_EFFECTS, 0, 1, ALLEGRO_PLAYMODE_ONCE, 0);
+						}
+						draw = true;
+					} else if (mouseX >= 1083 && mouseX <= 1194 && mouseY >= 238 && mouseY <= 348) { // Add Players
+						players++;
+						if (players >= 9) {
+							players = 8;
+							al_play_sample(error, options.SOUND_EFFECTS, 0, 1, ALLEGRO_PLAYMODE_ONCE, 0);
+						}
+						draw = true;
+					} else if (mouseX >= 34 && mouseX <= 146 && mouseY >= 34 && mouseY <= 95) { // Go back
+						screen = GamePick;
+						draw = true;
+					} else if (mouseX >= 975 && mouseX <= 1236 && mouseY >= 564 && mouseY <= 679) { // Play
+						screen = Playing;
+						draw = true;
+					}
+				} else if (screen == Playing) {
+					if (mouseX >= 994 && mouseY >= 580 && mouseX <= 1248 && mouseY <= 694) {
+						if (spin) { // Spin
+							for (int i = 0; i < 5; i++) {
+								if (rolling[i]) {
+									rollAnim[i] = true;
+									rolling[i] = false;
+								}
+							}
+							al_start_timer(animTimer);
+						} else if (!rollAnim[0] && !rollAnim[1] && !rollAnim[2] && !rollAnim[3] && !rollAnim[4]) { // End Turn
+							al_stop_timer(autoEndTurn);
+							screen = Scoring;
+							al_set_video_playing(playingBG, false);
+							al_set_video_playing(scoringVideo, true);
+							al_stop_sample(&mus);
+							al_play_sample(music, options.MUSIC, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, &mus);
+							turn = 1;
+						}
+					} else if (mouseX >= options.SCREEN_W / 2 - 62.5 - 300 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 - 300 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 1
+						if (!rolling[0] && turn < 4) {
+							rolling[0] = true;
+							spin = true;
+						} else if (rolling[0] && diceNum[0] != 0) {
+							rolling[0] = false;
+							if (!rolling[1] && !rolling[2] && !rolling[3] && !rolling[4]) {
+								spin = false;
+							}
+						}
+					} else if (mouseX >= options.SCREEN_W / 2 - 62.5 - 150 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 - 150 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 2
+						if (!rolling[1] && turn < 4) {
+							rolling[1] = true;
+							spin = true;
+						} else if (rolling[1] && diceNum[1] != 0) {
+							rolling[1] = false;
+							if (!rolling[0] && !rolling[2] && !rolling[3] && !rolling[4]) {
+								spin = false;
+							}
+						}
+					} else if (mouseX >= options.SCREEN_W / 2 - 62.5 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 3
+						if (!rolling[2] && turn < 4) {
+							rolling[2] = true;
+							spin = true;
+						} else if (rolling[2] && diceNum[2] != 0) {
+							rolling[2] = false;
+							if (!rolling[0] && !rolling[1] && !rolling[3] && !rolling[4]) {
+								spin = false;
+							}
+						}
+					} else if (mouseX >= options.SCREEN_W / 2 - 62.5 + 150 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 + 150 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 4
+						if (!rolling[3] && turn < 4) {
+							rolling[3] = true;
+							spin = true;
+						} else if (rolling[3] && diceNum[3] != 0) {
+							rolling[3] = false;
+							if (!rolling[0] && !rolling[1] && !rolling[2] && !rolling[4]) {
+								spin = false;
+							}
+						}
+					} else if (mouseX >= options.SCREEN_W / 2 - 62.5 + 300 && mouseY >= options.SCREEN_H / 2 - 62.5 && mouseX <= options.SCREEN_W / 2 + 62.5 + 300 && mouseY <= options.SCREEN_H / 2 + 62.5) { // Die 5
+						if (!rolling[4] && turn < 4) {
+							rolling[4] = true;
+							spin = true;
+						} else if (rolling[4] && diceNum[4] != 0) {
+							rolling[4] = false;
+							for (int i = 0; i < 5; i++) {
+								if (!rolling[0] && !rolling[1] && !rolling[2] && !rolling[3]) {
+									spin = false;
+								}
+							}
+						}
+					}	
+				} else if (screen == Scoring) {
+
 				}
 			}
 		} 
 		if (events.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
 			if (screen == Options) {
-				if (sliderToggle[0] == true) {
+				if (sliderToggle[0]) {
 					sliderToggle[0] = false;
 					sliderMoved[0] = mouseX - 492;
 					al_show_mouse_cursor(display);
-				} else if (sliderToggle[1] == true) {
+				} else if (sliderToggle[1]) {
 					sliderToggle[1] = false;
 					sliderMoved[1] = mouseX - 492;
 					al_show_mouse_cursor(display);
-				} else if (sliderToggle[2] == true) {
+				} else if (sliderToggle[2]) {
 					sliderToggle[2] = false;
 					sliderMoved[2] = mouseX - 492;
 					al_show_mouse_cursor(display);
-				} else if (sliderToggle[3] == true) {
+				} else if (sliderToggle[3]) {
 					sliderToggle[3] = false;
 					sliderMoved[3] = mouseX - 492;
 					al_show_mouse_cursor(display);
-				} else if (sliderToggle[4] == true) {
+				} else if (sliderToggle[4]) {
 					sliderToggle[4] = false;
 					sliderMoved[4] = mouseX - 492;
 					al_show_mouse_cursor(display);
 				}
 			}
 		}
-
 
 		// Checks for keyboard events
 		if (events.type == ALLEGRO_EVENT_KEY_DOWN) {
@@ -379,26 +612,29 @@ int main() {
 				if (screen == Playing) {
 					screen = Paused;
 					al_set_video_playing(playingBG, false);
+					al_stop_sample(&mus);
 					uno = true;
 					draw = true;
 				} else if (screen == Paused) {
 					screen = Playing;
 					al_set_video_playing(playingBG, true);
+					al_play_sample(music, options.MUSIC, 0, 1.0, ALLEGRO_PLAYMODE_LOOP, &mus);
 					draw = true;
 				} else if (screen == GamePick) {
 					screen = Title;
 					titleFade = 0;
 					showPlayButton = false;
 					al_set_video_playing(playingBG, false);
+					al_stop_sample(&mus);
 					al_seek_video(titlescreen, 0);
 					al_set_video_playing(titlescreen, true);
 					al_resume_timer(playButtonAppear);
 					al_clear_to_color(black);
 					draw = true;
-				} else if (screen == GameOptions) {
+				} else if (screen == GameOptions || screen == gameSetup || screen == Options) {
 					screen = GamePick;
 					draw = true;
-				}
+				} 
 				break;
 			}
 		}
@@ -410,6 +646,9 @@ int main() {
 			} else if (screen == Playing || screen == GamePick || screen == Options) {
 				al_seek_video(playingBG, 0);
 				al_set_video_playing(playingBG, true);
+			} else if (screen == Scoring) {
+				al_seek_video(scoringVideo, 0);
+				al_set_video_playing(scoringVideo, true);
 			}
 		}
 		// Plays the videos
@@ -425,9 +664,11 @@ int main() {
 						titleFade += 5;
 					}
 				}
-			} else if (screen == Playing || screen == GamePick || screen == Options) {
+			} else if (screen == Playing || screen == GamePick || screen == Options || screen == gameSetup) {
 				playVideo(display, playingBG);
-			} 
+			} else if (screen == Scoring) {
+				playVideo(display, scoringVideo);
+			}
 			draw = true;
 		}
 		// Checks for timer events
@@ -457,13 +698,95 @@ int main() {
 						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[3] - 35, 30, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 4
 						al_draw_textf(text16, black, 245, 365, NULL, "%.1f", sliderNum[4]);
 						al_draw_scaled_bitmap(optionSlider, 0, 0, 1920, 1080, sliderX[4] - 35, 60, options.SCREEN_W, options.SCREEN_H, NULL); // Slider 5
+					} else if (screen == gameSetup) {
+						al_draw_scaled_bitmap(playerAdd, 0, 0, 1920, 1080, 0, 0, options.SCREEN_W, options.SCREEN_H, NULL);
+						al_draw_textf(text72, white, options.SCREEN_W / 2, options.SCREEN_H / 2 - 115, ALLEGRO_ALIGN_CENTER, "%d Players", players);
+					} else if (screen == Playing) { // Playing
+						al_draw_textf(text72, white, options.SCREEN_W / 2, 24, ALLEGRO_ALIGN_CENTER, "Player %d", currentPlayer);
+						al_draw_scaled_bitmap(die, 0, 0, 1080, 1080, options.SCREEN_W / 2 - 62.5 - 300, options.SCREEN_H / 2 - 62.5, options.SCREEN_W / 10.24, options.SCREEN_H / 5.76, NULL);
+						al_draw_scaled_bitmap(die, 0, 0, 1080, 1080, options.SCREEN_W / 2 - 62.5 - 150, options.SCREEN_H / 2 - 62.5, options.SCREEN_W / 10.24, options.SCREEN_H / 5.76, NULL);
+						al_draw_scaled_bitmap(die, 0, 0, 1080, 1080, options.SCREEN_W / 2 - 62.5 + 0, options.SCREEN_H / 2 - 62.5, options.SCREEN_W / 10.24, options.SCREEN_H / 5.76, NULL);
+						al_draw_scaled_bitmap(die, 0, 0, 1080, 1080, options.SCREEN_W / 2 - 62.5 + 150, options.SCREEN_H / 2 - 62.5, options.SCREEN_W / 10.24, options.SCREEN_H / 5.76, NULL);
+						al_draw_scaled_bitmap(die, 0, 0, 1080, 1080, options.SCREEN_W / 2 - 62.5 + 300, options.SCREEN_H / 2 - 62.5, options.SCREEN_W / 10.24, options.SCREEN_H / 5.76, NULL);
+						if (rolling[0] || diceNum[0] == 0) {
+							al_draw_scaled_bitmap(dieOverlay, 0, 0, 1188, 1188, options.SCREEN_W / 2 - 68.75 - 300, options.SCREEN_H / 2 - 68.75, options.SCREEN_W / 9.3, options.SCREEN_H / 5.24, NULL);
+							rolling[0] = true;
+							spin = true;
+						}
+						if (rolling[1] || diceNum[1] == 0) {
+							al_draw_scaled_bitmap(dieOverlay, 0, 0, 1188, 1188, options.SCREEN_W / 2 - 68.75 - 150, options.SCREEN_H / 2 - 68.75, options.SCREEN_W / 9.3, options.SCREEN_H / 5.24, NULL);
+							rolling[1] = true;
+							spin = true;
+						}
+						if (rolling[2] || diceNum[2] == 0) {
+							al_draw_scaled_bitmap(dieOverlay, 0, 0, 1188, 1188, options.SCREEN_W / 2 - 68.75, options.SCREEN_H / 2 - 68.75, options.SCREEN_W / 9.3, options.SCREEN_H / 5.24, NULL);
+							rolling[2] = true;
+							spin = true;
+						}
+						if (rolling[3] || diceNum[3] == 0) {
+							al_draw_scaled_bitmap(dieOverlay, 0, 0, 1188, 1188, options.SCREEN_W / 2 - 68.75 + 150, options.SCREEN_H / 2 - 68.75, options.SCREEN_W / 9.3, options.SCREEN_H / 5.24, NULL);
+							rolling[3] = true;
+							spin = true;
+						}
+						if (rolling[4] || diceNum[4] == 0) {
+							al_draw_scaled_bitmap(dieOverlay, 0, 0, 1188, 1188, options.SCREEN_W / 2 - 68.75 + 300, options.SCREEN_H / 2 - 68.75, options.SCREEN_W / 9.3, options.SCREEN_H / 5.24, NULL);
+							rolling[4] = true;
+							spin = true;
+						}
+						
+						if (spin && turn < 4) {
+							al_draw_scaled_bitmap(button, 0, 0, 1920, 1080, 0, 0, options.SCREEN_W, options.SCREEN_H, NULL); // Button
+							al_draw_text(text54, white, 1050, 605, NULL, "SPIN");
+						} else if (!rollAnim[0] && !rollAnim[1] && !rollAnim[2] && !rollAnim[3] && !rollAnim[4]) {
+							al_draw_scaled_bitmap(button, 0, 0, 1920, 1080, 0, 0, options.SCREEN_W, options.SCREEN_H, NULL); // Button
+							al_draw_text(text36, white, 1020, 615, NULL, "END TURN");
+						}
+						
+						for (int i = 0; i < 5; i++) {
+							if (rollAnim[i]) {
+								if (rollTimer < 2) {
+									rollTimer++;
+								} else {
+									rollTimer = 0;
+									diceNum[i] = diceRoll();
+								}
+							}
+						}
+						
+						al_draw_textf(text72, black, options.SCREEN_W / 2 - 300, options.SCREEN_H / 2 - 42, ALLEGRO_ALIGN_CENTER, "%d", diceNum[0]);
+						al_draw_textf(text72, black, options.SCREEN_W / 2 - 150, options.SCREEN_H / 2 - 42, ALLEGRO_ALIGN_CENTER, "%d", diceNum[1]);
+						al_draw_textf(text72, black, options.SCREEN_W / 2 - 0, options.SCREEN_H / 2 - 42, ALLEGRO_ALIGN_CENTER, "%d", diceNum[2]);
+						al_draw_textf(text72, black, options.SCREEN_W / 2 + 150, options.SCREEN_H / 2 - 42, ALLEGRO_ALIGN_CENTER, "%d", diceNum[3]);
+						al_draw_textf(text72, black, options.SCREEN_W / 2 + 300, options.SCREEN_H / 2 - 42, ALLEGRO_ALIGN_CENTER, "%d", diceNum[4]);
+					} else if (screen == Scoring) {
+						scoreCalculations(diceNum[0], diceNum[1], diceNum[2], diceNum[3], diceNum[4], text16, black);
 					}
 					draw = false;
 					al_flip_display();
 				}
 			} else if (events.timer.source == playButtonAppear) {
-				showPlayButton = true;
-				al_stop_timer(playButtonAppear);
+			showPlayButton = true;
+			al_stop_timer(playButtonAppear);
+			} else if (events.timer.source == autoEndTurn) {
+				for (int i = 0; i < 5; i++) {
+					diceNum[i] = 0;
+					rolling[i] = false;
+				}
+				currentPlayer++;
+				if (currentPlayer > players) {
+					currentPlayer = 1;
+				}
+				al_stop_timer(autoEndTurn);
+				draw = true;
+			} else if (events.timer.source == animTimer) {
+				for (int i = 0; i < 5; i++) {
+					rollAnim[i] = false;
+					rolling[i] = false;
+				}
+				turn++;
+				spin = false;
+				al_stop_timer(animTimer);
+				draw = true;
 			}
 		}
 	}
